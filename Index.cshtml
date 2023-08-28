@@ -1,0 +1,116 @@
+﻿@{
+    ViewBag.Title = "Home Page";
+}
+
+<br />
+<div class="row">
+    <div class="col-md-2">
+        <select class="form-control" id="idallfees">
+            <option value="">Select Fee</option>
+            @{
+                string fees = ViewBag.FeeDropDown;
+                string[] AllFees = fees.Split(',').ToArray();
+                foreach (var item in AllFees)
+                {
+                    <option value="@item">@item</option>
+                }
+            }
+        </select>
+    </div>
+    <div class="col-md-2 clsallfees"></div>
+    <div class="col-md-2 clsallcourses"></div>
+    <div class="col-md-2 clsallListcourses"></div>
+    <div class="col-md-2 clsallAmount"></div>
+</div>
+<div class="row clsAmountShown">
+
+</div>
+
+<script src="~/Scripts/jquery-3.4.1.js"></script>
+<script>
+    $("#idallfees").on("change", function () {
+        $(".clsallfees,.clsallcourses,.clsallListcourses").empty();
+        $(".clsAmountShown").empty();
+        if ($(this).val() != "") {
+            $.ajax({
+                url: "/Home/GetAllNations",
+                data: { "fee": $(this).val() },
+                success: function (data) {
+                    var nations = `<select class="form-control" id="idallNation">
+                                    <option value="">Select Nation</option>
+                                  </select>`;
+                    $(".clsallfees").empty().append(nations);
+                    for (var i = 0; i < data.length; i++) {
+                        $("#idallNation").append("<option value=" + data[i] + ">" + data[i] + "</option>");
+                    }
+                    $("#idallNation").on("change", function () {
+                        $(".clsallcourses,.clsallListcourses").empty();
+                        if ($(this).val() != "") {
+                            idallAllcourses();
+                        }
+                    });
+                }
+            });
+        }
+    });
+    function idallAllcourses() {
+        $(".clsallcourses,.clsallListcourses").empty();
+        $(".clsAmountShown").empty();
+        var courses = `<select class="form-control" id="idallCourses">
+                                    <option value="">Select Courses</option>
+                                    <option value="ALL_COURSES">ALL_COURSES</option>
+                                  </select>`;
+        //<option value="ALL_LEVEL">ALL_LEVEL</option>
+
+        $(".clsallcourses").empty().append(courses);
+        idallListCourses();
+    };
+    function idallListCourses() {
+        $("#idallCourses").on("change", function () {
+            $(".clsallListcourses").empty();
+            $(".clsAmountShown").empty();
+            if ($(this).val() != "") {
+                var fee = $("#idallfees").val();
+                var nation = $("#idallNation").val();
+                var course = $(this).val();
+                $.ajax({
+                    url: "/Home/GetAllCourses",
+                    data: { "fee": fee, "nation": nation, "course": course },
+                    success: function (data) {
+                        var nations = `<select class="form-control" id="idallListCourse">
+                                    <option value="">Select Course</option>
+                                  </select>`;
+                        $(".clsallListcourses").empty().append(nations);
+                        for (var i = 0; i < data.length; i++) {
+                            $("#idallListCourse").append("<option value=" + data[i] + ">" + data[i] + "</option>");
+                        }
+                        GetAmount();
+                    }
+                });
+            }
+        });
+    };
+    function GetAmount() {
+        $("#idallListCourse").on("change", function () {
+            $(".clsallAmount").empty();
+            $(".clsAmountShown").empty();
+            if ($(this).val() != "") {
+                var fee = $("#idallfees").val();
+                var nation = $("#idallNation").val();
+                var course = $("#idallCourses").val();
+                var subject = $("#idallListCourse").val();
+                $.ajax({
+                    url: "/Home/GetAmount",
+                    data: { "fee": fee, "nation": nation, "course": course, "subject": subject },
+                    success: function (data) {
+                        if (data != "") {
+                            $(".clsAmountShown").empty().append("<h1>Amount for the course " + $("#idallListCourse").val() + " is: <b>" + data + "</b></h1>")
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+
+</script>
